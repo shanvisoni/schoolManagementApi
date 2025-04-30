@@ -17,6 +17,10 @@ app.use((req, res, next) => {
         message: 'Resource not found'
     });
 });
+app.get("/", (req, res) => {
+    res.send("API is running...");
+  });
+  
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: 'Something went wrong!' });
