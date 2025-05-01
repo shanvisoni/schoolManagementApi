@@ -1,32 +1,85 @@
+// import express from 'express';
+// import bodyParser from 'body-parser';
+// import cors from 'cors';
+// import schoolRoutes from'./routes/schoolRoutes.js';
+// import dotenv from 'dotenv'; 
+
+// dotenv.config(); 
+// const app = express();
+
+// app.use(cors());
+// app.use(bodyParser.json());
+
+// app.use('/', schoolRoutes);
+// app.use((req, res, next) => {
+//     res.status(404).json({
+//         success: false,
+//         message: 'Resource not found'
+//     });
+// });
+// app.get("/", (req, res) => {
+//     res.send("API is running...");
+//   });
+  
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).json({ success: false, message: 'Something went wrong!' });
+// });
+
+// const PORT = process.env.PORT || 8000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });.
+
+
+
+
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import schoolRoutes from'./routes/schoolRoutes.js';
-import dotenv from 'dotenv'; 
+import schoolRoutes from './routes/schoolRoutes.js';
+import dotenv from 'dotenv';
 
-dotenv.config(); 
+dotenv.config();
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/', schoolRoutes);
-app.use((req, res, next) => {
-    res.status(404).json({
-        success: false,
-        message: 'Resource not found'
-    });
-});
-app.get("/", (req, res) => {
-    res.send("API is running...");
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'API is running',
+    endpoints: {
+      addSchool: 'POST /api/addSchool',
+      listSchools: 'GET /api/listSchools?latitude=XX&longitude=XX'
+    }
   });
-  
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+// API routes with /api prefix
+app.use('/api', schoolRoutes);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Resource not found'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    success: false, 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
