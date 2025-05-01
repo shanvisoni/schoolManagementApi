@@ -18,31 +18,94 @@
 
 
 
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+
+// dotenv.config();
+
+// const dbConfig = {
+//   host: process.env.MYSQLHOST || 'mysql.railway.internal' || process.env.DB_HOST || 'localhost',
+//   port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
+//   user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+//   password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
+//   database: process.env.MYSQLDATABASE || process.env.DB_DATABASE || 'railway',
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0,
+//   ssl: process.env.RAILWAY_ENVIRONMENT === 'production' ? 
+//     { rejectUnauthorized: false } : null
+// };
+
+
+
+
+
+// const pool = mysql.createPool(dbConfig);
+
+// // Connection test and table initialization
+// const initialize = async () => {
+//   try {
+//     const conn = await pool.getConnection();
+//     console.log('✅ Database connected to:', dbConfig.host);
+    
+//     await conn.query(`
+//       CREATE TABLE IF NOT EXISTS schools (
+//         id INT AUTO_INCREMENT PRIMARY KEY,
+//         name VARCHAR(255) NOT NULL,
+//         address VARCHAR(255) NOT NULL,
+//         latitude FLOAT NOT NULL,
+//         longitude FLOAT NOT NULL,
+//         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+//       )
+//     `);
+//     console.log("✅ Schools table ready");
+    
+//     conn.release();
+//   } catch (err) {
+//     console.error('❌ Initialization failed:', err.message);
+//     process.exit(1);
+//   }
+// };
+
+// initialize();
+// export default pool;
+
+
+
+
+
+
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+const isProduction = process.env.RAILWAY_ENVIRONMENT === 'production';
+
 const dbConfig = {
-  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+  host: isProduction ? 
+    (process.env.MYSQLHOST || 'mysql.railway.internal') : 
+    (process.env.DB_HOST || 'localhost'),
   port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
   user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
+  password: isProduction ? 
+    process.env.MYSQLPASSWORD : 
+    process.env.DB_PASSWORD || '',
   database: process.env.MYSQLDATABASE || process.env.DB_DATABASE || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: process.env.RAILWAY_ENVIRONMENT === 'production' ? 
-    { rejectUnauthorized: false } : null
+  ssl: isProduction ? { rejectUnauthorized: false } : null
 };
 
 const pool = mysql.createPool(dbConfig);
 
-// Connection test and table initialization
 const initialize = async () => {
   try {
     const conn = await pool.getConnection();
     console.log('✅ Database connected to:', dbConfig.host);
+    console.log('🔧 Mode:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
     
     await conn.query(`
       CREATE TABLE IF NOT EXISTS schools (
@@ -56,7 +119,6 @@ const initialize = async () => {
       )
     `);
     console.log("✅ Schools table ready");
-    
     conn.release();
   } catch (err) {
     console.error('❌ Initialization failed:', err.message);
