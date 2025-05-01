@@ -28,7 +28,8 @@ const getDbConfig = () => {
 
   if (process.env.DATABASE_URL) {
     try {
-      const dbUrl = new URL(process.env.DATABASE_URL); // Fixed typo here
+      const dbUrl = new URL(process.env.DATABASE_URL || process.env.MYSQL_URL);
+ // Fixed typo here
       return {
         host: dbUrl.hostname,
         port: dbUrl.port,
