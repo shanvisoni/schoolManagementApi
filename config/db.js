@@ -85,7 +85,7 @@ const isProduction = process.env.RAILWAY_ENVIRONMENT === 'production';
 
 const dbConfig = {
   host: isProduction ? 
-    (process.env.MYSQLHOST || 'shuttle.proxy.rlwy.net') : 
+    (process.env.MYSQLHOST || 'mysql.railway.internal') : 
     (process.env.DB_HOST || 'localhost'),
   port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
   user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
