@@ -40,11 +40,15 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import schoolRoutes from './routes/schoolRoutes.js';
 import dotenv from 'dotenv';
+import pool from './config/db.js';
 
 dotenv.config();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST']
+}));
 app.use(bodyParser.json());
 
 
