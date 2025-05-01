@@ -25,7 +25,7 @@ dotenv.config();
 
 // Handle both Railway and local development
 const getDbConfig = () => {
-  // For Railway production
+
   if (process.env.DATABASE_URL) {
     try {
       const dbUrl = new URL(process.env.DATABASE_URL); // Fixed typo here
