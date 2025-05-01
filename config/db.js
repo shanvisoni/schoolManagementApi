@@ -23,65 +23,46 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Handle both Railway and local development
-const getDbConfig = () => {
-
-  if (process.env.DATABASE_URL) {
-    try {
-      const dbUrl = new URL(process.env.DATABASE_URL || process.env.MYSQL_URL);
- // Fixed typo here
-      return {
-        host: dbUrl.hostname,
-        port: dbUrl.port,
-        user: dbUrl.username,
-        password: dbUrl.password,
-        database: dbUrl.pathname.replace('/', ''),
-        ssl: { rejectUnauthorized: false }
-      };
-    } catch (err) {
-      console.error('❌ Error parsing DATABASE_URL:', err.message);
-      process.exit(1);
-    }
-  }
-
-  // For local development (using .env)
-  console.log('⚠️ Using local database configuration');
-  return {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_DATABASE || 'railway',
-    ssl: null // No SSL for local development
-  };
-};
-
 const dbConfig = {
-  ...getDbConfig(),
+  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
+  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
+  database: process.env.MYSQLDATABASE || process.env.DB_DATABASE || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ssl: process.env.RAILWAY_ENVIRONMENT === 'production' ? 
+    { rejectUnauthorized: false } : null
 };
 
 const pool = mysql.createPool(dbConfig);
 
-// Test connection
-pool.getConnection()
-  .then(conn => {
+// Connection test and table initialization
+const initialize = async () => {
+  try {
+    const conn = await pool.getConnection();
     console.log('✅ Database connected to:', dbConfig.host);
-    console.log('🔑 Using database:', dbConfig.database);
+    
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS schools (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        latitude FLOAT NOT NULL,
+        longitude FLOAT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Schools table ready");
+    
     conn.release();
-  })
-  .catch(err => {
-    console.error('❌ Connection failed to:', dbConfig.host);
-    console.error('Error:', err.message);
-    console.log('Current config:', {
-      host: dbConfig.host,
-      port: dbConfig.port,
-      user: dbConfig.user,
-      database: dbConfig.database
-    });
+  } catch (err) {
+    console.error('❌ Initialization failed:', err.message);
     process.exit(1);
-  });
+  }
+};
 
+initialize();
 export default pool;
