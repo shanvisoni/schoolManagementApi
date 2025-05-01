@@ -90,31 +90,38 @@ app.use((err, req, res, next) => {
 });
 
 
-app.get('/db-check', async (req, res) => {
+// Add this temporary route to test connection
+app.get('/test-db', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT 1 + 1 AS result');
-    res.json({ 
-      success: true,
-      dbResult: rows[0].result,
-      dbConfig: {
-        host: pool.config.connectionConfig.host,
-        user: pool.config.connectionConfig.user,
-        database: pool.config.connectionConfig.database
-      }
+    const conn = await mysql.createConnection({
+      host: process.env.MYSQLHOST,
+      port: parseInt(process.env.MYSQLPORT),
+      user: process.env.MYSQLUSER,
+      password: process.env.MYSQLPASSWORD
     });
+    res.json({ success: true });
+    conn.end();
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message,
-      dbConfig: pool.config.connectionConfig
-    });
+    res.json({ success: false, error: err.message });
   }
 });
 
 
 // Add health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+app.get('/health', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1');
+    res.status(200).json({ 
+      status: 'OK',
+      database: 'connected'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'DOWN',
+      database: 'disconnected',
+      error: err.message
+    });
+  }
 });
 
 
