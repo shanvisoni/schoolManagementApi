@@ -18,49 +18,69 @@
 
 
 
-
-
-
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Handle both Railway and local development
+const getDbConfig = () => {
+  // For Railway production
+  if (process.env.DATABASE_URL) {
+    try {
+      const dbUrl = new URL(process.env.DATABASE_URL); // Fixed typo here
+      return {
+        host: dbUrl.hostname,
+        port: dbUrl.port,
+        user: dbUrl.username,
+        password: dbUrl.password,
+        database: dbUrl.pathname.replace('/', ''),
+        ssl: { rejectUnauthorized: false }
+      };
+    } catch (err) {
+      console.error('❌ Error parsing DATABASE_URL:', err.message);
+      process.exit(1);
+    }
+  }
+
+  // For local development (using .env)
+  console.log('⚠️ Using local database configuration');
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || 'railway',
+    ssl: null // No SSL for local development
+  };
+};
+
 const dbConfig = {
-  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
-  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
-  database: process.env.MYSQLDATABASE || process.env.DB_DATABASE || 'railway',
+  ...getDbConfig(),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 };
 
-// Add SSL for Railway production
-if (process.env.RAILWAY_ENVIRONMENT === 'production') {
-  dbConfig.ssl = { rejectUnauthorized: false };
-}
-
 const pool = mysql.createPool(dbConfig);
 
-// Enhanced connection test
+// Test connection
 pool.getConnection()
   .then(conn => {
-    console.log('Successfully connected to MySQL!');
-    console.log('Database config:', {
+    console.log('✅ Database connected to:', dbConfig.host);
+    console.log('🔑 Using database:', dbConfig.database);
+    conn.release();
+  })
+  .catch(err => {
+    console.error('❌ Connection failed to:', dbConfig.host);
+    console.error('Error:', err.message);
+    console.log('Current config:', {
       host: dbConfig.host,
       port: dbConfig.port,
       user: dbConfig.user,
       database: dbConfig.database
     });
-    conn.release();
-  })
-  .catch(err => {
-    console.error('DATABASE CONNECTION FAILED!');
-    console.error('Current configuration:', dbConfig);
-    console.error('Full error:', err);
-    process.exit(1); // Exit with error code
+    process.exit(1);
   });
 
 export default pool;

@@ -49,14 +49,8 @@ app.use(bodyParser.json());
 
 
 
-console.log('Environment Variables:', {
-  NODE_ENV: process.env.NODE_ENV,
-  RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
-  MYSQLHOST: process.env.MYSQLHOST ? '*****' : 'undefined',
-  MYSQLUSER: process.env.MYSQLUSER ? '*****' : 'undefined',
-  MYSQLDATABASE: process.env.MYSQLDATABASE ? '*****' : 'undefined',
-  MYSQLPORT: process.env.MYSQLPORT || 'undefined'
-});
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 
 // Health check endpoint
