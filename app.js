@@ -47,6 +47,18 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
+
+console.log('Environment Variables:', {
+  NODE_ENV: process.env.NODE_ENV,
+  RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+  MYSQLHOST: process.env.MYSQLHOST ? '*****' : 'undefined',
+  MYSQLUSER: process.env.MYSQLUSER ? '*****' : 'undefined',
+  MYSQLDATABASE: process.env.MYSQLDATABASE ? '*****' : 'undefined',
+  MYSQLPORT: process.env.MYSQLPORT || 'undefined'
+});
+
+
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -77,6 +89,28 @@ app.use((err, req, res, next) => {
     message: 'Internal server error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
+});
+
+
+app.get('/db-check', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1 + 1 AS result');
+    res.json({ 
+      success: true,
+      dbResult: rows[0].result,
+      dbConfig: {
+        host: pool.config.connectionConfig.host,
+        user: pool.config.connectionConfig.user,
+        database: pool.config.connectionConfig.database
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      dbConfig: pool.config.connectionConfig
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
