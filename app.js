@@ -120,7 +120,7 @@ app.get('/health', (req, res) => {
 
 
 
-const PORT = process.env.PORT || 8080; // Railway uses 8080
+const PORT = process.env.PORT || 8000; // Railway uses 8080
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
