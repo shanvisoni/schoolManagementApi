@@ -83,21 +83,20 @@ dotenv.config();
 
 const isProduction = process.env.RAILWAY_ENVIRONMENT === 'production';
 
+
+
 const dbConfig = {
-  host: process.env.MYSQLHOST || 'mysql.railway.internal',
-  port: parseInt(process.env.MYSQLPORT || '3306'), // Default to 3306 if not set
-  user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || 'qfPcyjsueiBBMPdYdZGwgJAAGeIOetqh',
-  database: process.env.MYSQLDATABASE || 'railway',
+  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
+  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || 'qfPcyjsueiBBMPdYdZGwgJAAGeIOetqh',
+  database: process.env.MYSQLDATABASE || process.env.DB_DATABASE || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // Remove SSL for internal Railway connections
-  ssl: process.env.RAILWAY_ENVIRONMENT === 'production' && 
-       !process.env.MYSQLHOST.includes('railway.internal') ? 
-       { rejectUnauthorized: false } : null
+  ssl: process.env.RAILWAY_ENVIRONMENT === 'production' ? 
+    { rejectUnauthorized: false } : null
 };
-
 const pool = mysql.createPool(dbConfig);
 
 const initialize = async () => {

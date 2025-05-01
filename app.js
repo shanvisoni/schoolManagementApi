@@ -42,7 +42,16 @@ import schoolRoutes from './routes/schoolRoutes.js';
 import dotenv from 'dotenv';
 import pool from './config/db.js';
 
-dotenv.config();
+dotenv.config({
+  path: process.env.NODE_ENV === 'production' 
+    ? '.env.production' 
+    : '.env.development'
+});
+
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('Database host:', process.env.MYSQLHOST || process.env.DB_HOST);
+
+
 const app = express();
 
 app.use(cors({
@@ -113,13 +122,16 @@ app.get('/health', async (req, res) => {
     const [rows] = await pool.query('SELECT 1');
     res.status(200).json({ 
       status: 'OK',
-      database: 'connected'
+      database: 'connected',
+      port: PORT, // Add this line
+      host: process.env.HOSTNAME // Add this line
     });
   } catch (err) {
     res.status(500).json({
       status: 'DOWN',
-      database: 'disconnected',
-      error: err.message
+      error: err.message,
+      port: PORT, // Add this line
+      host: process.env.HOSTNAME // Add this line
     });
   }
 });
@@ -127,7 +139,7 @@ app.get('/health', async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 8000; // Railway uses 8080
+const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 : 8000); // Railway uses 8080
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
